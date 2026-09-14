@@ -1,2 +1,5 @@
 # Regenerable — rebuild with `python3 make_dataset.py`
 data/dataset.npz
+
+__pycache__/
+*.pyc
