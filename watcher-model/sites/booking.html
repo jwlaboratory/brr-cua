@@ -1,0 +1,162 @@
+<title>Ticket Booking</title>
+<style>html,body{margin:0;padding:0;overflow:hidden;background:#1a1a1f}canvas{display:block}</style>
+<canvas id="c"></canvas>
+<script>
+(function(){
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  // Phase state lives ONLY here in JS.
+  let phase = 'loading';           // 'loading' | 'loaded'
+  let phaseStart = performance.now();
+  let loadDuration = randDelay();
+  let restartRect = null;          // hit area for the Restart button (drawn on canvas)
+  let W = 0, H = 0, dpr = 1;
+
+  function randDelay(){ return 1000 + Math.random() * 3000; }
+
+  function resize(){
+    dpr = window.devicePixelRatio || 1;
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Rounded rect helper
+  function rr(x, y, w, h, r){
+    r = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+  }
+
+  const SIZE = 360; // square-ish content area
+
+  function content(){
+    return { x: (W - SIZE) / 2, y: (H - SIZE) / 2, s: SIZE };
+  }
+
+  function drawRestart(){
+    const bw = 76, bh = 30;
+    const x = W - bw - 16, y = 16;
+    restartRect = { x, y, w: bw, h: bh };
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    rr(x, y, bw, bh, 8); ctx.fill();
+    ctx.fillStyle = '#e8e8ee';
+    ctx.font = '13px system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('Restart', x + bw/2, y + bh/2 + 1);
+  }
+
+  function drawLoading(now){
+    ctx.fillStyle = '#1a1a1f';
+    ctx.fillRect(0, 0, W, H);
+    const { x, y, s } = content();
+    const cx = x + s/2, cy = y + s/2 - 10;
+
+    // Heading
+    ctx.fillStyle = '#8a8a95';
+    ctx.font = '600 22px system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText('Processing…', cx, y + s - 40);
+
+    // Spinner: partial ring arc rotating
+    const t = (now - phaseStart) / 1000;
+    const start = (t * 3) % (Math.PI * 2);
+    const R = 42;
+    ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
+    // faint full ring
+    ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2); ctx.stroke();
+    // active arc
+    ctx.strokeStyle = '#7c5cff';
+    ctx.beginPath(); ctx.arc(cx, cy, R, start, start + Math.PI * 1.25); ctx.stroke();
+  }
+
+  function drawLoaded(){
+    ctx.fillStyle = '#f4f4f8';
+    ctx.fillRect(0, 0, W, H);
+    const { x, y, s } = content();
+    const cx = x + s/2;
+
+    // Heading
+    ctx.fillStyle = '#1f2430';
+    ctx.font = '700 26px system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText('Confirmed', cx, y + 40);
+
+    // Green filled circle with white checkmark
+    const cy = y + 120, R = 48;
+    ctx.fillStyle = '#22c55e';
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx - 20, cy + 2);
+    ctx.lineTo(cx - 5, cy + 17);
+    ctx.lineTo(cx + 22, cy - 16);
+    ctx.stroke();
+
+    // Gray rounded "text" bars
+    ctx.fillStyle = '#c9ccd6';
+    rr(x + 60, y + 200, s - 120, 14, 7); ctx.fill();
+    rr(x + 90, y + 226, s - 180, 14, 7); ctx.fill();
+
+    // Purple rounded "button" bar
+    ctx.fillStyle = '#7c5cff';
+    rr(x + 60, y + 275, s - 120, 46, 12); ctx.fill();
+  }
+
+  function frame(now){
+    if (phase === 'loading'){
+      if (now - phaseStart >= loadDuration){
+        phase = 'loaded';
+      } else {
+        drawLoading(now);
+        drawRestart();
+        requestAnimationFrame(frame);
+        return;
+      }
+    }
+    drawLoaded();
+    drawRestart();
+    requestAnimationFrame(loadedIdle);
+  }
+
+  // When loaded we still redraw so Restart button/resize stays crisp, cheaply.
+  function loadedIdle(){
+    if (phase !== 'loaded') { requestAnimationFrame(frame); return; }
+    drawLoaded();
+    drawRestart();
+    requestAnimationFrame(loadedIdle);
+  }
+
+  function restart(){
+    phase = 'loading';
+    phaseStart = performance.now();
+    loadDuration = randDelay();
+    requestAnimationFrame(frame);
+  }
+
+  canvas.addEventListener('click', function(e){
+    const r = canvas.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    if (restartRect && mx >= restartRect.x && mx <= restartRect.x + restartRect.w &&
+        my >= restartRect.y && my <= restartRect.y + restartRect.h){
+      restart();
+    }
+  });
+
+  requestAnimationFrame(frame);
+})();
+</script>

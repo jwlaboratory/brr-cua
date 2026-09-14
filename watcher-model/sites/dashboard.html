@@ -1,0 +1,144 @@
+<title>Analytics Dashboard</title>
+<style>html,body{margin:0;padding:0;overflow:hidden;background:#15161b}canvas{display:block}</style>
+<canvas id="c"></canvas>
+<script>
+(function(){
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  let phase = 'loading';
+  let phaseStart = performance.now();
+  let loadDuration = randDelay();
+  let restartRect = null;
+  let W = 0, H = 0, dpr = 1;
+
+  function randDelay(){ return 1000 + Math.random() * 3000; }
+
+  function resize(){
+    dpr = window.devicePixelRatio || 1;
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function rr(x, y, w, h, r){
+    r = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+  }
+
+  const SIZE = 360;
+  function content(){ return { x: (W - SIZE)/2, y: (H - SIZE)/2, s: SIZE }; }
+
+  function drawRestart(){
+    const bw = 76, bh = 30;
+    const x = W - bw - 16, y = 16;
+    restartRect = { x, y, w: bw, h: bh };
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    rr(x, y, bw, bh, 8); ctx.fill();
+    ctx.fillStyle = '#e8e8ee';
+    ctx.font = '13px system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('Restart', x + bw/2, y + bh/2 + 1);
+  }
+
+  function drawLoading(now){
+    ctx.fillStyle = '#15161b';
+    ctx.fillRect(0, 0, W, H);
+    const { x, y, s } = content();
+    const cx = x + s/2, cy = y + s/2;
+
+    ctx.fillStyle = '#8a8a95';
+    ctx.font = '600 22px system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText('Loading data…', cx, cy - 30);
+
+    // Progress bar: rounded track + colored fill filling 10% -> 90%.
+    const barW = s - 40, barH = 16;
+    const bx = x + 20, by = cy;
+    ctx.fillStyle = '#2b2d34';
+    rr(bx, by, barW, barH, 8); ctx.fill();
+
+    const t = Math.min(1, (now - phaseStart) / loadDuration);
+    const pct = 0.10 + t * 0.80; // 10% -> 90%
+    ctx.fillStyle = '#3b82f6';
+    rr(bx, by, Math.max(barH, barW * pct), barH, 8); ctx.fill();
+  }
+
+  function drawLoaded(){
+    ctx.fillStyle = '#f4f4f8';
+    ctx.fillRect(0, 0, W, H);
+    const { x, y, s } = content();
+
+    ctx.fillStyle = '#1f2430';
+    ctx.font = '700 24px system-ui, sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText('Revenue', x, y + 24);
+
+    // Big bold number
+    ctx.fillStyle = '#111827';
+    ctx.font = '800 44px system-ui, sans-serif';
+    ctx.fillText('$128K', x, y + 74);
+
+    // Label bars under the number
+    ctx.fillStyle = '#c9ccd6';
+    rr(x, y + 88, 140, 12, 6); ctx.fill();
+    rr(x, y + 108, 90, 12, 6); ctx.fill();
+
+    // Bar chart: 6 vertical colored bars of varying heights.
+    const colors = ['#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6','#14b8a6'];
+    const heights = [0.5, 0.8, 0.35, 1.0, 0.65, 0.45];
+    const chartBottom = y + s;
+    const chartTop = y + 150;
+    const chartH = chartBottom - chartTop;
+    const n = colors.length;
+    const gap = 14;
+    const bw = (s - gap * (n - 1)) / n;
+    for (let i = 0; i < n; i++){
+      const h = chartH * heights[i];
+      const bx = x + i * (bw + gap);
+      const by = chartBottom - h;
+      ctx.fillStyle = colors[i];
+      rr(bx, by, bw, h, 6); ctx.fill();
+    }
+  }
+
+  function frame(now){
+    if (phase === 'loading'){
+      if (now - phaseStart >= loadDuration){ phase = 'loaded'; }
+      else { drawLoading(now); drawRestart(); requestAnimationFrame(frame); return; }
+    }
+    drawLoaded(); drawRestart();
+    requestAnimationFrame(loadedIdle);
+  }
+  function loadedIdle(){
+    if (phase !== 'loaded'){ requestAnimationFrame(frame); return; }
+    drawLoaded(); drawRestart();
+    requestAnimationFrame(loadedIdle);
+  }
+
+  function restart(){
+    phase = 'loading'; phaseStart = performance.now(); loadDuration = randDelay();
+    requestAnimationFrame(frame);
+  }
+
+  canvas.addEventListener('click', function(e){
+    const r = canvas.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    if (restartRect && mx >= restartRect.x && mx <= restartRect.x + restartRect.w &&
+        my >= restartRect.y && my <= restartRect.y + restartRect.h){ restart(); }
+  });
+
+  requestAnimationFrame(frame);
+})();
+</script>

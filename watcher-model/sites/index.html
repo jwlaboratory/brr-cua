@@ -1,0 +1,46 @@
+<title>Canvas POC Sites</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0; padding: 40px 20px;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #14151a; color: #e8e8ee;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  h1 { font-size: 28px; margin: 0 0 6px; }
+  p.sub { color: #8a8a95; margin: 0 0 28px; font-size: 14px; }
+  ul { list-style: none; padding: 0; margin: 0; width: 100%; max-width: 560px; }
+  li { margin: 0 0 12px; }
+  a {
+    display: block; text-decoration: none; color: inherit;
+    background: #1e2027; border: 1px solid #2b2d34; border-radius: 12px;
+    padding: 16px 18px; transition: background .15s, border-color .15s;
+  }
+  a:hover { background: #262932; border-color: #3a3d47; }
+  .name { font-size: 17px; font-weight: 600; }
+  .desc { font-size: 13px; color: #9a9aa5; margin-top: 4px; }
+</style>
+<h1>Canvas POC Sites</h1>
+<p class="sub">Each page renders entirely to a full-window canvas with a loading &rarr; loaded lifecycle.</p>
+<ul>
+  <li><a href="booking.html">
+    <div class="name">Ticket Booking</div>
+    <div class="desc">Loading: rotating spinner ring &middot; Loaded: green check, text bars, purple button.</div>
+  </a></li>
+  <li><a href="feed.html">
+    <div class="name">Social Feed</div>
+    <div class="desc">Loading: skeleton blocks with diagonal shimmer &middot; Loaded: avatar, text bars, image.</div>
+  </a></li>
+  <li><a href="dashboard.html">
+    <div class="name">Analytics Dashboard</div>
+    <div class="desc">Loading: progress bar filling &middot; Loaded: bar chart, big number, labels.</div>
+  </a></li>
+  <li><a href="video.html">
+    <div class="name">Video Player</div>
+    <div class="desc">Loading: bouncing buffering dots &middot; Loaded: play triangle, scrubber, time bar.</div>
+  </a></li>
+  <li><a href="shop.html">
+    <div class="name">Product Page</div>
+    <div class="desc">Loading: shimmer image + bar placeholders &middot; Loaded: product, price, add-to-cart.</div>
+  </a></li>
+</ul>

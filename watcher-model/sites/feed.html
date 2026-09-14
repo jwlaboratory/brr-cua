@@ -1,0 +1,164 @@
+<title>Social Feed</title>
+<style>html,body{margin:0;padding:0;overflow:hidden;background:#17181c}canvas{display:block}</style>
+<canvas id="c"></canvas>
+<script>
+(function(){
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  let phase = 'loading';
+  let phaseStart = performance.now();
+  let loadDuration = randDelay();
+  let restartRect = null;
+  let W = 0, H = 0, dpr = 1;
+
+  function randDelay(){ return 1000 + Math.random() * 3000; }
+
+  function resize(){
+    dpr = window.devicePixelRatio || 1;
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function rr(x, y, w, h, r){
+    r = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+  }
+
+  const SIZE = 360;
+  function content(){ return { x: (W - SIZE)/2, y: (H - SIZE)/2, s: SIZE }; }
+
+  function drawRestart(){
+    const bw = 76, bh = 30;
+    const x = W - bw - 16, y = 16;
+    restartRect = { x, y, w: bw, h: bh };
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    rr(x, y, bw, bh, 8); ctx.fill();
+    ctx.fillStyle = '#e8e8ee';
+    ctx.font = '13px system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('Restart', x + bw/2, y + bh/2 + 1);
+  }
+
+  // Layout used by both states so skeleton maps to real content.
+  function layout(){
+    const { x, y, s } = content();
+    return {
+      avatar: { cx: x + 34, cy: y + 44, r: 22 },
+      bars: [
+        { x: x + 68, y: y + 30, w: 140, h: 12 },
+        { x: x + 68, y: y + 50, w: 90,  h: 10 }
+      ],
+      textBars: [
+        { x: x, y: y + 90,  w: s,       h: 12 },
+        { x: x, y: y + 112, w: s - 40,  h: 12 },
+        { x: x, y: y + 134, w: s - 90,  h: 12 }
+      ],
+      image: { x: x, y: y + 168, w: s, h: 150 }
+    };
+  }
+
+  function drawLoading(now){
+    ctx.fillStyle = '#17181c';
+    ctx.fillRect(0, 0, W, H);
+    const L = layout();
+    const g = '#2b2d34'; // light-gray-ish placeholder on dark bg
+
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(L.avatar.cx, L.avatar.cy, L.avatar.r, 0, Math.PI*2); ctx.fill();
+    L.bars.forEach(b => { rr(b.x, b.y, b.w, b.h, 6); ctx.fill(); });
+    L.textBars.forEach(b => { rr(b.x, b.y, b.w, b.h, 6); ctx.fill(); });
+    rr(L.image.x, L.image.y, L.image.w, L.image.h, 12); ctx.fill();
+
+    // Diagonal shimmer band sweeping across the content area.
+    const { x, y, s } = content();
+    const t = ((now - phaseStart) / 1200) % 1;
+    const bandW = 120;
+    const px = x - bandW + t * (s + bandW * 2);
+    ctx.save();
+    rr(x, y, s, s, 12); ctx.clip();
+    const grad = ctx.createLinearGradient(px, y, px + bandW, y + s);
+    grad.addColorStop(0, 'rgba(255,255,255,0)');
+    grad.addColorStop(0.5, 'rgba(255,255,255,0.10)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x - 40, y, s + 80, s);
+    ctx.restore();
+  }
+
+  function drawLoaded(){
+    ctx.fillStyle = '#f4f4f8';
+    ctx.fillRect(0, 0, W, H);
+    const { x, y, s } = content();
+    const L = layout();
+
+    ctx.fillStyle = '#1f2430';
+    ctx.font = '700 24px system-ui, sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText('Feed', x, y - 14);
+
+    // Colored avatar
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath(); ctx.arc(L.avatar.cx, L.avatar.cy, L.avatar.r, 0, Math.PI*2); ctx.fill();
+
+    // Name/handle bars
+    ctx.fillStyle = '#3a4050';
+    L.bars.forEach(b => { rr(b.x, b.y, b.w, b.h, 6); ctx.fill(); });
+
+    // Dark text bars
+    ctx.fillStyle = '#2b2f3a';
+    L.textBars.forEach(b => { rr(b.x, b.y, b.w, b.h, 6); ctx.fill(); });
+
+    // Colored image block (teal with orange corner accent)
+    ctx.fillStyle = '#14b8a6';
+    rr(L.image.x, L.image.y, L.image.w, L.image.h, 12); ctx.fill();
+    ctx.save();
+    rr(L.image.x, L.image.y, L.image.w, L.image.h, 12); ctx.clip();
+    ctx.fillStyle = '#f97316';
+    ctx.beginPath();
+    ctx.arc(L.image.x + L.image.w - 30, L.image.y + L.image.h - 20, 55, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function frame(now){
+    if (phase === 'loading'){
+      if (now - phaseStart >= loadDuration){ phase = 'loaded'; }
+      else { drawLoading(now); drawRestart(); requestAnimationFrame(frame); return; }
+    }
+    drawLoaded(); drawRestart();
+    requestAnimationFrame(loadedIdle);
+  }
+  function loadedIdle(){
+    if (phase !== 'loaded'){ requestAnimationFrame(frame); return; }
+    drawLoaded(); drawRestart();
+    requestAnimationFrame(loadedIdle);
+  }
+
+  function restart(){
+    phase = 'loading'; phaseStart = performance.now(); loadDuration = randDelay();
+    requestAnimationFrame(frame);
+  }
+
+  canvas.addEventListener('click', function(e){
+    const r = canvas.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    if (restartRect && mx >= restartRect.x && mx <= restartRect.x + restartRect.w &&
+        my >= restartRect.y && my <= restartRect.y + restartRect.h){ restart(); }
+  });
+
+  requestAnimationFrame(frame);
+})();
+</script>
