@@ -59,19 +59,26 @@ def main():
         return
 
     region = [float(a) for a in sys.argv[1:5]] if len(sys.argv) >= 5 else None
-    print("watching… (Ctrl-C to stop)")
+    print("watching… (Ctrl-C to stop)", flush=True)
     t0 = time.time()
     ready_streak = 0
-    while True:
+    armed = False        # only fire after we've actually seen a loading state
+    armed_at = None
+    while time.time() - t0 < 30:            # 30s safety timeout
         p = net.predict(preprocess(grab(region)))[0]
         k = int(p.argmax())
         elapsed = time.time() - t0
-        print(f"  [{elapsed:5.1f}s] {CLASSES[k]:8s} ready={p[1]*100:5.1f}%", flush=True)
+        if k == 0 and not armed:
+            armed, armed_at = True, elapsed
+        tag = "loading" if k == 0 else "ready"
+        print(f"  [{elapsed:5.1f}s] {tag:8s} ready={p[1]*100:5.1f}%{'  <armed>' if (k==0 and armed_at==elapsed) else ''}", flush=True)
         ready_streak = ready_streak + 1 if k == 1 else 0
-        if ready_streak >= STABLE_N:
-            print(f"\n>>> READY after {elapsed:.1f}s — waking the main agent.")
+        if armed and ready_streak >= STABLE_N:
+            waited = elapsed - armed_at
+            print(f"\n>>> READY — waking the main agent (waited {waited:.1f}s from loading→ready).", flush=True)
             return
         time.sleep(POLL_S)
+    print("\n(timed out without a loading→ready edge)", flush=True)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,39 @@
+watching… (Ctrl-C to stop)
+  [  0.2s] ready    ready= 99.9%
+  [  0.7s] ready    ready= 99.9%
+  [  1.1s] ready    ready= 99.9%
+  [  1.5s] ready    ready= 99.9%
+  [  1.9s] ready    ready= 99.9%
+  [  2.4s] ready    ready= 99.9%
+  [  2.8s] ready    ready= 99.9%
+  [  3.3s] ready    ready= 99.9%
+  [  3.7s] ready    ready= 99.9%
+  [  4.1s] ready    ready= 99.9%
+  [  4.6s] ready    ready= 99.9%
+  [  5.0s] ready    ready= 99.9%
+  [  5.5s] ready    ready= 99.9%
+  [  5.9s] ready    ready= 99.9%
+  [  6.3s] ready    ready= 99.9%
+  [  6.7s] ready    ready= 99.9%
+  [  7.2s] ready    ready= 99.9%
+  [  7.6s] ready    ready= 99.9%
+  [  8.1s] ready    ready= 99.9%
+  [  8.5s] ready    ready= 99.9%
+  [  9.0s] ready    ready=100.0%
+  [  9.4s] ready    ready=100.0%
+  [  9.8s] ready    ready=100.0%
+  [ 10.3s] ready    ready=100.0%
+  [ 10.7s] ready    ready=100.0%
+  [ 11.1s] ready    ready=100.0%
+  [ 11.6s] loading  ready=  0.0%  <armed>
+  [ 12.0s] loading  ready=  0.0%
+  [ 12.4s] loading  ready=  0.0%
+  [ 12.9s] loading  ready=  0.0%
+  [ 13.3s] loading  ready=  0.0%
+  [ 13.8s] loading  ready=  0.0%
+  [ 14.2s] loading  ready=  0.0%
+  [ 14.7s] loading  ready=  0.0%
+  [ 15.1s] ready    ready=100.0%
+  [ 15.6s] ready    ready=100.0%
+
+>>> READY — waking the main agent (waited 4.0s from loading→ready).

@@ -24,6 +24,29 @@ size the model never trained on). See `data/results.png`:
 The model is ~**0.5 MB** of weights, runs a classification in a few
 milliseconds on CPU, and trains in well under a minute.
 
+## Live demo — it actually works on the real screen
+
+`watch.py` was run as an independent process watching the **real macOS display**
+while a page was reloaded in Chrome. It arms when it sees `loading` and fires a
+single `READY` edge when the page settles (full log: `data/live_demo.log`):
+
+```
+  [ 11.1s] ready    ready= 99.9%
+  [ 11.6s] loading  ready=  0.0%  <armed>      <- page reloaded
+  [ 12.0s] loading  ready=  0.0%
+   ...
+  [ 14.7s] loading  ready=  0.0%
+  [ 15.1s] ready    ready=100.0%
+>>> READY — waking the main agent (waited 4.0s from loading→ready).
+```
+
+**Why this matters vs. how agents wait today** (see [`../Agent/REPORT.md`](../Agent/REPORT.md)):
+a computer-use agent asked to "wait for the page" has only two options — blind
+`sleep` (guess a duration) or poll by screenshotting, where **each poll is a full
+~4s model turn** costing thousands of vision tokens. This watcher polls ~2–3×
+per second for near-zero cost and emits one clean "ready" interrupt, so the
+expensive agent spends **zero** turns waiting.
+
 ## The 5 site types
 
 Each has a visually distinct loading indicator, so the model learns the general

@@ -1,12 +1,12 @@
 """
 model.py — a tiny CNN implemented from scratch in NumPy (no torch/sklearn).
 
-Architecture (input 3x48x48):
-  conv1 3->8, 3x3, pad1   -> ReLU -> maxpool 2   (8x24x24)
-  conv2 8->16, 3x3, pad1  -> ReLU -> maxpool 2   (16x12x12)
-  flatten (2304) -> fc -> 2 logits -> softmax
+Architecture (input 3x64x64):
+  conv1 3->8, 3x3, pad1   -> ReLU -> maxpool 2   (8x32x32)
+  conv2 8->16, 3x3, pad1  -> ReLU -> maxpool 2   (16x16x16)
+  flatten (4096) -> fc -> 2 logits -> softmax
 
-~6k parameters. Trains in seconds on CPU. Conv uses an im2col + single
+~8k parameters. Trains in under a minute on CPU. Conv uses an im2col + single
 BLAS matmul, so it's fast despite being pure NumPy.
 """
 
