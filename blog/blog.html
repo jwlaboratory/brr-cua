@@ -1,0 +1,327 @@
+<style>
+  :root{
+    --ink:#151420; --paper:#f6f5fb; --card:#ffffff;
+    --muted:#6c6982; --faint:#9a97ad; --line:rgba(21,20,32,.12);
+    --indigo:#5b50e6; --violet:#8b5cf6; --iris:#a5b4fc;
+    --green:#0fae7a; --amber:#d98a1f;
+    --term-bg:#16141f; --term-ink:#e9e7f4; --term-dim:#8b87a8;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --wide:980px; --col:700px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:var(--sans);font-size:18px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:var(--wide);margin:0 auto;padding:0 24px;}
+  .col{max-width:var(--col);margin-left:auto;margin-right:auto;}
+  a{color:var(--indigo);text-decoration:none;border-bottom:1px solid rgba(91,80,230,.3);}
+  a:hover{border-bottom-color:var(--indigo);}
+  p{margin:0 0 1.1em;}
+  .col > p, .col > h2, .col > h3, .col > ul, .col > ol, .col > .note, .col > .pull{}
+  h1,h2,h3{text-wrap:balance;line-height:1.12;letter-spacing:-.01em;}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--violet);margin:0 0 14px;font-weight:600;}
+  code{font-family:var(--mono);font-size:.86em;background:rgba(91,80,230,.09);
+    padding:.12em .38em;border-radius:5px;color:#3f37b3;}
+
+  /* header / hero */
+  header.top{border-bottom:1px solid var(--line);}
+  .masthead{display:flex;justify-content:space-between;align-items:center;
+    padding:16px 0;font-family:var(--mono);font-size:13px;color:var(--muted);}
+  .masthead .dot{display:inline-block;width:8px;height:8px;border-radius:50%;
+    background:var(--indigo);margin-right:8px;vertical-align:middle;}
+  .hero{padding:72px 0 40px;}
+  .hero h1{font-family:var(--mono);font-weight:600;font-size:clamp(30px,5.2vw,52px);
+    letter-spacing:-.02em;margin:0 0 22px;}
+  .hero h1 .lo{color:var(--indigo);} .hero h1 .rd{color:var(--green);}
+  .hero .dek{font-size:clamp(19px,2.4vw,23px);color:var(--muted);max-width:40ch;margin:0;}
+  .byline{margin-top:28px;font-family:var(--mono);font-size:13px;color:var(--faint);
+    display:flex;gap:18px;flex-wrap:wrap;}
+
+  /* loading->ready motif */
+  .motif{display:flex;align-items:center;gap:16px;margin:34px 0 8px;
+    font-family:var(--mono);font-size:14px;color:var(--muted);}
+  .spin{width:30px;height:30px;border-radius:50%;
+    border:3px solid rgba(91,80,230,.22);border-top-color:var(--indigo);
+    animation:spin .8s linear infinite;}
+  .check{width:30px;height:30px;border-radius:50%;background:var(--green);
+    display:none;position:relative;}
+  .check::after{content:"";position:absolute;left:10px;top:5px;width:7px;height:14px;
+    border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg);}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .motif.done .spin{display:none}.motif.done .check{display:block}
+  .arrow{color:var(--faint)}
+
+  /* stat strip */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    background:var(--line);border:1px solid var(--line);border-radius:14px;
+    overflow:hidden;margin:8px 0 12px;}
+  .stat{background:var(--card);padding:22px 18px;}
+  .stat .n{font-family:var(--mono);font-size:26px;font-weight:600;
+    font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+  .stat .n.g{color:var(--green)} .stat .n.i{color:var(--indigo)}
+  .stat .l{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.35;}
+  @media(max-width:680px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+  /* sections */
+  section{padding:44px 0;}
+  section h2{font-size:clamp(24px,3.4vw,32px);font-weight:700;margin:0 0 6px;}
+  .kicker{font-family:var(--mono);color:var(--violet);font-size:13px;font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;margin:0 0 18px;}
+  section h3{font-size:20px;font-weight:700;margin:32px 0 8px;}
+
+  .note{border-left:3px solid var(--iris);background:rgba(139,92,246,.06);
+    padding:14px 18px;border-radius:0 10px 10px 0;color:#3c3752;font-size:16px;margin:22px 0;}
+  .pull{font-family:var(--sans);font-weight:600;font-size:clamp(21px,3vw,27px);
+    line-height:1.3;color:var(--ink);border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);padding:26px 0;margin:34px 0;letter-spacing:-.01em;}
+  .pull .hi{color:var(--indigo);}
+
+  /* figures */
+  figure{margin:34px auto;max-width:var(--wide);}
+  figure img{width:100%;height:auto;display:block;border-radius:12px;
+    border:1px solid var(--line);box-shadow:0 18px 44px rgba(21,20,32,.10);}
+  figcaption{font-size:13.5px;color:var(--muted);margin-top:12px;text-align:center;
+    font-family:var(--mono);}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .pair figcaption{margin-top:8px;}
+
+  /* timeline */
+  ol.gauntlet{list-style:none;counter-reset:g;padding:0;margin:26px 0;}
+  ol.gauntlet li{counter-increment:g;position:relative;padding:0 0 26px 62px;}
+  ol.gauntlet li::before{content:counter(g,decimal-leading-zero);
+    position:absolute;left:0;top:-2px;font-family:var(--mono);font-size:14px;
+    font-weight:600;color:#fff;background:var(--indigo);width:40px;height:40px;
+    border-radius:10px;display:flex;align-items:center;justify-content:center;}
+  ol.gauntlet li::after{content:"";position:absolute;left:19px;top:44px;bottom:2px;
+    width:2px;background:var(--line);}
+  ol.gauntlet li:last-child::after{display:none;}
+  ol.gauntlet .sym{font-weight:700;display:block;margin-bottom:3px;font-size:17.5px;}
+  ol.gauntlet .fix{color:var(--muted);font-size:16px;}
+  ol.gauntlet .fix b{color:var(--green);font-weight:600;}
+
+  /* terminal */
+  .term{background:var(--term-bg);border-radius:12px;overflow:hidden;
+    margin:26px auto;max-width:var(--wide);box-shadow:0 18px 44px rgba(21,20,32,.22);}
+  .term .bar{display:flex;align-items:center;gap:8px;padding:11px 15px;
+    background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.07);}
+  .term .bar i{width:11px;height:11px;border-radius:50%;display:inline-block;}
+  .term .bar i:nth-child(1){background:#ff5f57}.term .bar i:nth-child(2){background:#febc2e}
+  .term .bar i:nth-child(3){background:#28c840}
+  .term .bar span{font-family:var(--mono);font-size:12px;color:var(--term-dim);margin-left:8px;}
+  .term pre{margin:0;padding:18px 20px;overflow-x:auto;
+    font-family:var(--mono);font-size:13px;line-height:1.7;color:var(--term-ink);}
+  .term .dim{color:var(--term-dim);}
+  .term .lo{color:var(--iris);} .term .rd{color:#4ade9e;}
+  .term .fire{color:#4ade9e;font-weight:700;}
+  .term .arm{color:var(--amber);}
+
+  ul.clean{list-style:none;padding:0;margin:16px 0;}
+  ul.clean li{padding:8px 0 8px 26px;position:relative;border-bottom:1px solid var(--line);}
+  ul.clean li::before{content:"→";position:absolute;left:0;color:var(--indigo);font-family:var(--mono);}
+
+  footer{border-top:1px solid var(--line);padding:40px 0 70px;margin-top:30px;
+    font-family:var(--mono);font-size:14px;color:var(--muted);}
+  footer .repo{color:var(--ink);font-weight:600;}
+
+  @media (prefers-reduced-motion: reduce){
+    .spin{animation:none} .motif .spin{display:none}.motif .check{display:block}
+  }
+</style>
+
+<header class="top">
+  <div class="wrap masthead">
+    <div><span class="dot"></span>brr-cua · field notes</div>
+    <div>computer-use / perception</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero col">
+    <p class="eyebrow">On making agents wait well</p>
+    <h1>Your agent can't tell the page went from <span class="lo">loading</span> to <span class="rd">ready</span></h1>
+    <p class="dek">So it guesses. Here's why that's structurally expensive — and a 40&nbsp;KB model that fixes it.</p>
+    <div class="motif" id="motif" aria-hidden="true">
+      <span class="spin"></span><span class="check"></span>
+      <span class="arrow">→</span>
+      <span id="motif-t">processing…</span>
+    </div>
+    <div class="byline">
+      <span>A build log</span><span>·</span><span>5 sites, 1 tiny CNN</span><span>·</span><span>pure NumPy</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="stats">
+    <div class="stat"><div class="n i">~4.2s</div><div class="l">one agent observe→act turn (measured)</div></div>
+    <div class="stat"><div class="n">1–4s</div><div class="l">the page load it's waiting on (avg 2.1s)</div></div>
+    <div class="stat"><div class="n g">10/10</div><div class="l">held-out real screenshots classified right</div></div>
+    <div class="stat"><div class="n g">~40 KB</div><div class="l">the whole watcher model</div></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <section class="col">
+    <p class="kicker">The setup</p>
+    <h2>A booking page that makes you wait</h2>
+    <p>It started with a throwaway demo: a ticket-booking page. You pick a quantity, hit <em>Buy&nbsp;Ticket</em>, and it spins for a random 1–4 seconds — a fake payment — before landing on a confirmation. Utterly ordinary. Every app on the internet does some version of this.</p>
+    <p>The interesting question showed up the moment we pointed a computer-use agent at it: <strong>when the page is “processing,” how does the agent know when it’s done?</strong></p>
+  </section>
+</div>
+
+<figure class="wrap">
+  <div class="pair">
+    <div><img src="{{IMG:booking_loading}}" alt="Booking page processing spinner"><figcaption>processing… (1–4s)</figcaption></div>
+    <div><img src="{{IMG:booking_loaded}}" alt="Booking confirmed screen"><figcaption>ready — but how would an agent know?</figcaption></div>
+  </div>
+</figure>
+
+<div class="wrap">
+  <section class="col">
+    <p class="kicker">The question</p>
+    <h2>Is “wait for the page” actually inefficient?</h2>
+    <p>To study it honestly we needed to remove the cheat. Normally an agent skips vision entirely: it polls the DOM (<code>read_page</code>) — cheap, exact, instant — and waits for a “Confirmed” node to appear. That path is fine. It's not where the cost lives.</p>
+    <p>So we rebuilt the flow rendered <em>entirely to a <code>&lt;canvas&gt;</code></em>, with the state living only in a JS closure. Now the DOM reveals nothing:</p>
+    <div class="term">
+      <div class="bar"><i></i><i></i><i></i><span>read_page — canvas booking page</span></div>
+      <pre><span class="dim">$ read_page(tab)</span>
+Viewport: 1200x728
+<span class="dim"># …that's it. No text, no nodes, no state.</span></pre>
+    </div>
+    <p>With the DOM empty, the only way to perceive “loading vs done” is to <em>look at pixels</em> — a screenshot. And that's where it gets expensive.</p>
+
+    <h3>What the toolset gives you for waiting</h3>
+    <p>Exactly two options, and no third:</p>
+    <ul class="clean">
+      <li><b>Blind sleep</b> — guess a duration and hope. Too short, you act on a loading screen; too long, you burn time on every run.</li>
+      <li><b>Poll</b> — screenshot again, and again, until it looks done. Each screenshot is a <em>full model turn</em>: seconds of latency plus a whole image's worth of vision tokens.</li>
+    </ul>
+    <p>There is no “notify me when the page is ready.” No interrupt. No event. The environment knows the exact instant it settled; the agent has no way to receive that signal.</p>
+
+    <p class="pull">The agent's clock ticks <span class="hi">slower</span> than the thing it's watching. In our runs one observe→act turn took ~4.2s — longer than the 1–4s load itself.</p>
+
+    <p>The consequence is almost funny: we clicked “Buy” and drove the flow by screenshot, and <strong>the loading spinner never once appeared in our captures</strong>. The page finished loading <em>inside a single turn</em>, every time. You can't poll something that resolves faster than you can think about it — you either miss it or you sit blind.</p>
+  </section>
+</div>
+
+<div class="wrap">
+  <section class="col">
+    <p class="kicker">The idea</p>
+    <h2>A tiny model that watches so the big one doesn't have to</h2>
+    <p>If the expensive agent can't afford to poll, put a cheap one on the job. Run a <strong>small vision model in a tight loop on the screen</strong> whose only job is to answer one yes/no question — <em>still loading?</em> — and fire a single interrupt the moment the page settles. The big model issues its click, parks, and gets woken once.</p>
+    <p>This decouples the poll clock (tens of milliseconds, near-free) from the agent's inference clock (~4s, token-heavy). It's the visual analog of “network idle,” but it works on the hard case — <code>&lt;canvas&gt;</code>, video, WebGL — where the DOM and network say nothing.</p>
+    <p>So we built it as a proof of concept. Constraint: it has to be <em>tiny</em> and run locally. No PyTorch, no scikit-learn — those weren't even installed. Just NumPy and Pillow, and a CNN written from scratch.</p>
+  </section>
+</div>
+
+<div class="wrap">
+  <section class="col">
+    <p class="kicker">Building it</p>
+    <h2>Five sites, so it learns the concept — not one page</h2>
+    <p>A detector trained on one booking page just memorizes that page. To learn the general idea of “a loading indicator is present,” it needs variety. So we made five site archetypes, each with its own loading vernacular: a spinner, a skeleton screen, a progress bar, buffering dots, and a shimmer placeholder — resolving to a checkmark, a feed, a chart, a play button, and a product.</p>
+  </section>
+</div>
+
+<figure class="wrap">
+  <img src="{{IMG:preview}}" alt="Five site types in loading and ready states">
+  <figcaption>top: loading · bottom: ready — the five archetypes the model trains on</figcaption>
+</figure>
+
+<div class="wrap">
+  <section class="col">
+    <p>The pipeline: a PIL <strong>renderer</strong> draws unlimited randomized variants for volume, a <strong>from-scratch NumPy CNN</strong> (<code>conv→pool→conv→pool→fc</code>, ~9k parameters, hand-written backprop and Adam) learns the two classes, and a <strong>predictor</strong> scores real screenshots. On synthetic data it hit 100% instantly. The real world was less polite.</p>
+
+    <p class="kicker" style="margin-top:8px">The gauntlet</p>
+    <h2>Every failure was a domain-gap lesson</h2>
+    <p>Trained on synthetic frames, tested on real browser screenshots, the model failed in four distinct and instructive ways. Each fix made it more honest:</p>
+
+    <ol class="gauntlet">
+      <li>
+        <span class="sym">Everything came back black.</span>
+        <span class="fix">The capture was racing the paint — <code>toDataURL</code> fired before the canvas rendered. <b>Fix: capture only after a real paint.</b></span>
+      </li>
+      <li>
+        <span class="sym">Every real screen read as “loading.”</span>
+        <span class="fix">Synthetic used dark backgrounds for both states; real apps show content on <em>light</em> backgrounds. The model had become a brightness detector. <b>Fix: randomize background lightness independent of phase, forcing it to learn structure.</b></span>
+      </li>
+      <li>
+        <span class="sym">Booking &amp; feed “loaded” still misread.</span>
+        <span class="fix">Synthetic content filled the frame; real content is a small island in a sea of margin. <b>Fix: scale &amp; placement augmentation — zoom in and out.</b></span>
+      </li>
+      <li>
+        <span class="sym">The video player refused to cooperate.</span>
+        <span class="fix">A dark player pane looks nearly identical whether it shows three buffering dots or a small play triangle — a few pixels of difference. Synthetic tricks got it to a coin-flip and no further.</span>
+      </li>
+    </ol>
+  </section>
+</div>
+
+<div class="wrap">
+  <section class="col">
+    <p class="kicker">The turn</p>
+    <h2>Real data was the thing that closed it</h2>
+    <p>The suggestion that cracked the last case was simple: stop simulating — <strong>just screenshot the real sites</strong>. We captured actual frames from the running pages across several window sizes, augmented them hard (zoom, jitter, brightness, noise), and mixed them into training.</p>
+    <p>Synthetic alone had reached 9/10. Adding a handful of <em>real</em> video frames tipped the last one over. The lesson generalizes: for near-degenerate visual states, a little real data beats a lot of synthetic.</p>
+    <p class="pull">Result: <span class="hi">10 out of 10</span> on held-out real screenshots — captured at a window size the model never trained on.</p>
+  </section>
+</div>
+
+<figure class="wrap">
+  <img src="{{IMG:results}}" alt="Ten held-out real screenshots, all classified correctly">
+  <figcaption>held-out real frames · every prediction correct (green = right)</figcaption>
+</figure>
+
+<div class="wrap">
+  <section class="col">
+    <p class="kicker">Does it work?</p>
+    <h2>Live, on the real screen</h2>
+    <p>The final test wasn't a test set — it was the watcher running as its own process, watching the actual display while a page reloaded in Chrome. It arms when it sees <span style="color:var(--amber)">loading</span>, and fires one clean edge when the page settles:</p>
+    <div class="term">
+      <div class="bar"><i></i><i></i><i></i><span>python3 watch.py — live screen</span></div>
+<pre><span class="dim">watching… (Ctrl-C to stop)</span>
+  [ 11.1s] <span class="rd">ready</span>    ready= 99.9%
+  [ 11.6s] <span class="lo">loading</span>  ready=  0.0%  <span class="arm">&lt;armed&gt;</span>   <span class="dim">← page reloaded</span>
+  [ 12.0s] <span class="lo">loading</span>  ready=  0.0%
+  [ 12.9s] <span class="lo">loading</span>  ready=  0.0%
+  [ 13.8s] <span class="lo">loading</span>  ready=  0.0%
+  [ 14.7s] <span class="lo">loading</span>  ready=  0.0%
+  [ 15.1s] <span class="rd">ready</span>    ready=100.0%
+
+<span class="fire">&gt;&gt;&gt; READY — waking the main agent (waited 4.0s from loading→ready).</span></pre>
+    </div>
+    <p>It correctly held fire on the leftover “ready” screen, armed the instant the reload began, tracked the load at 2–3 checks per second, and emitted the interrupt at the transition. The expensive agent spends <strong>zero</strong> turns waiting — it just gets woken.</p>
+  </section>
+</div>
+
+<div class="wrap">
+  <section class="col">
+    <p class="kicker">Takeaways</p>
+    <h2>What this actually says</h2>
+    <ul class="clean">
+      <li>The inefficiency isn't a bad model policy — given the tools, “screenshot until it looks done” is the <em>correct</em> strategy. The ceiling is the interface: no readiness event, plus a multi-second, token-heavy perception step.</li>
+      <li>DOM-visible readiness is a solved, cheap problem. The real gap is <em>visual</em> readiness — canvas, video, WebGL, image diffs — a growing share of real apps.</li>
+      <li>A cheap always-on watcher supplies the missing primitive out-of-band: it turns a busy-wait into an interrupt without waiting for the platform to grow the feature.</li>
+      <li>You don't need a big model. ~40 KB of hand-written NumPy, trained mostly on synthetic pixels plus a few real screenshots, watches the screen faster and cheaper than the agent ever could.</li>
+    </ul>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap col">
+    <div>Code, data, and the tiny model: <span class="repo">github.com/jwlaboratory/brr-cua</span></div>
+    <div style="margin-top:8px;color:var(--faint)">watcher-model/ · Agent/REPORT.md · demo page/</div>
+  </div>
+</footer>
+
+<script>
+  // loading → ready motif in the hero (respects reduced-motion via CSS)
+  (function(){
+    var m=document.getElementById('motif'), t=document.getElementById('motif-t');
+    if(!m) return;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduce){ m.classList.add('done'); if(t) t.textContent='ready.'; return; }
+    setTimeout(function(){ m.classList.add('done'); if(t) t.textContent='ready.'; }, 2200);
+  })();
+</script>

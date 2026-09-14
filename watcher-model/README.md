@@ -21,8 +21,8 @@ size the model never trained on). See `data/results.png`:
 | loading | ✅ | ✅ | ✅ | ✅ | ✅ |
 | ready | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-The model is ~**0.5 MB** of weights, runs a classification in a few
-milliseconds on CPU, and trains in well under a minute.
+The model is ~**40 KB** of weights (~9k parameters), runs a classification in a
+few milliseconds on CPU, and trains in well under a minute.
 
 ## Live demo — it actually works on the real screen
 

@@ -106,7 +106,7 @@ Design notes / open questions worth prototyping:
 This is essentially rows 1–4 below implemented as an out-of-band service rather than waiting on the interface to grow the feature.
 
 > **Built as a proof of concept** in [`../watcher-model`](../watcher-model): a
-> ~0.5 MB from-scratch NumPy CNN that classifies a screenshot as `loading` vs
+> ~40 KB from-scratch NumPy CNN that classifies a screenshot as `loading` vs
 > `ready` across 5 site types, scoring **10/10 on held-out real browser
 > screenshots** and running in a few ms per frame. `watcher-model/watch.py` is
 > the loop — it polls the screen and emits a single "READY" edge, the interrupt
