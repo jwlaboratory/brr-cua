@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Canvas Booking</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #0f172a; overflow: hidden; }
+    /*
+      Everything the agent needs to perceive is painted onto <canvas>.
+      The DOM is intentionally empty of state: no text, no aria labels,
+      no data-* attributes that reveal whether we are on the booking,
+      loading, or confirmation screen. The ONLY way to know the current
+      state is to look at the rendered pixels.
+    */
+    #stage { display: block; width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+  <canvas id="stage"></canvas>
+  <script>
+    const canvas = document.getElementById('stage');
+    const ctx = canvas.getContext('2d');
+
+    // Logical drawing size; scaled for crispness on HiDPI.
+    let W = 0, H = 0, DPR = Math.max(1, window.devicePixelRatio || 1);
+
+    // State is kept ONLY in this closure — never mirrored to the DOM.
+    let state = 'booking';         // 'booking' | 'loading' | 'confirmed'
+    let readyAt = 0;               // timestamp when loading should finish
+    let ticketCode = '';
+    let qty = 1;
+    const PRICE = 49;
+
+    // Button hitboxes in logical (CSS) pixels, recomputed on each draw.
+    let buyBtn = null, minusBtn = null, plusBtn = null, againBtn = null;
+
+    function resize() {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = Math.floor(W * DPR);
+      canvas.height = Math.floor(H * DPR);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+
+    function cx() { return W / 2; }
+
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function clear() {
+      const g = ctx.createLinearGradient(0, 0, W, H);
+      g.addColorStop(0, '#1e1b4b');
+      g.addColorStop(1, '#4c1d95');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    function drawBooking() {
+      buyBtn = minusBtn = plusBtn = againBtn = null;
+      clear();
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#a5b4fc';
+      ctx.font = '600 14px system-ui, sans-serif';
+      ctx.fillText('LIVE CONCERT', cx(), H / 2 - 150);
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = '700 34px system-ui, sans-serif';
+      ctx.fillText('Aurora Live 2026', cx(), H / 2 - 108);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '400 16px system-ui, sans-serif';
+      ctx.fillText('Neon Arena · Fri, Oct 9 · 8:00 PM', cx(), H / 2 - 80);
+
+      // Quantity stepper
+      const qy = H / 2 - 30, bs = 40;
+      minusBtn = { x: cx() - 90, y: qy - bs / 2, w: bs, h: bs };
+      plusBtn  = { x: cx() + 50, y: qy - bs / 2, w: bs, h: bs };
+      ctx.fillStyle = 'rgba(255,255,255,0.10)';
+      roundRect(minusBtn.x, minusBtn.y, bs, bs, 10); ctx.fill();
+      roundRect(plusBtn.x, plusBtn.y, bs, bs, 10); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = '600 22px system-ui, sans-serif';
+      ctx.fillText('−', minusBtn.x + bs / 2, qy + 8);
+      ctx.fillText('+', plusBtn.x + bs / 2, qy + 8);
+      ctx.font = '700 22px system-ui, sans-serif';
+      ctx.fillText(String(qty), cx(), qy + 8);
+
+      // Total
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '400 15px system-ui, sans-serif';
+      ctx.fillText('Total: $' + (qty * PRICE).toFixed(2), cx(), H / 2 + 24);
+
+      // Buy button
+      const bw = 260, bh = 54;
+      buyBtn = { x: cx() - bw / 2, y: H / 2 + 50, w: bw, h: bh };
+      const bg = ctx.createLinearGradient(buyBtn.x, 0, buyBtn.x + bw, 0);
+      bg.addColorStop(0, '#6366f1');
+      bg.addColorStop(1, '#8b5cf6');
+      ctx.fillStyle = bg;
+      roundRect(buyBtn.x, buyBtn.y, bw, bh, 12); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = '600 18px system-ui, sans-serif';
+      ctx.fillText('Buy Ticket', cx(), buyBtn.y + bh / 2 + 6);
+    }
+
+    function drawLoading(t) {
+      buyBtn = minusBtn = plusBtn = againBtn = null;
+      clear();
+      // Spinner
+      const r = 34, cyc = H / 2 - 20;
+      const a = (t / 900) * Math.PI * 2;
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.beginPath(); ctx.arc(cx(), cyc, r, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = '#a5b4fc';
+      ctx.beginPath(); ctx.arc(cx(), cyc, r, a, a + Math.PI * 0.6); ctx.stroke();
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = '600 20px system-ui, sans-serif';
+      ctx.fillText('Processing your payment…', cx(), cyc + 80);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '400 14px system-ui, sans-serif';
+      ctx.fillText('Securing your seats, please hold on.', cx(), cyc + 106);
+    }
+
+    function drawConfirmed() {
+      minusBtn = plusBtn = buyBtn = null;
+      clear();
+      ctx.textAlign = 'center';
+      // Check circle
+      const cyc = H / 2 - 70, r = 38;
+      const g = ctx.createLinearGradient(cx() - r, 0, cx() + r, 0);
+      g.addColorStop(0, '#10b981');
+      g.addColorStop(1, '#059669');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(cx(), cyc, r, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 6; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(cx() - 16, cyc);
+      ctx.lineTo(cx() - 4, cyc + 13);
+      ctx.lineTo(cx() + 18, cyc - 14);
+      ctx.stroke();
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = '700 26px system-ui, sans-serif';
+      ctx.fillText("You're going!", cx(), cyc + 78);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '400 15px system-ui, sans-serif';
+      ctx.fillText('Booking confirmed · ' + qty + ' ticket' + (qty > 1 ? 's' : ''), cx(), cyc + 106);
+
+      // Ticket code box
+      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      roundRect(cx() - 130, cyc + 126, 260, 46, 10); ctx.fill();
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '600 20px monospace';
+      ctx.fillText(ticketCode, cx(), cyc + 155);
+
+      // Book again button
+      const bw = 200, bh = 46;
+      againBtn = { x: cx() - bw / 2, y: cyc + 190, w: bw, h: bh };
+      ctx.fillStyle = 'rgba(255,255,255,0.10)';
+      roundRect(againBtn.x, againBtn.y, bw, bh, 10); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = '600 15px system-ui, sans-serif';
+      ctx.fillText('Book Another', cx(), againBtn.y + bh / 2 + 5);
+    }
+
+    let start = performance.now();
+    function frame(now) {
+      const t = now - start;
+      if (state === 'loading' && now >= readyAt) {
+        state = 'confirmed';
+      }
+      if (state === 'booking') drawBooking();
+      else if (state === 'loading') drawLoading(t);
+      else drawConfirmed();
+      requestAnimationFrame(frame);
+    }
+
+    function hit(box, x, y) {
+      return box && x >= box.x && x <= box.x + box.w && y >= box.y && y <= box.y + box.h;
+    }
+
+    canvas.addEventListener('click', (e) => {
+      const x = e.clientX, y = e.clientY;
+      if (state === 'booking') {
+        if (hit(minusBtn, x, y)) { qty = Math.max(1, qty - 1); return; }
+        if (hit(plusBtn, x, y)) { qty = Math.min(10, qty + 1); return; }
+        if (hit(buyBtn, x, y)) {
+          state = 'loading';
+          // Random 1000-4000 ms processing delay.
+          readyAt = performance.now() + (1000 + Math.random() * 3000);
+          const n = Math.floor(100000 + Math.random() * 900000);
+          ticketCode = 'AUR-' + n;
+          return;
+        }
+      } else if (state === 'confirmed') {
+        if (hit(againBtn, x, y)) { qty = 1; state = 'booking'; return; }
+      }
+    });
+
+    window.addEventListener('resize', resize);
+    resize();
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>
