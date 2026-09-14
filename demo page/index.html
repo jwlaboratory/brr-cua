@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aurora Live — Ticket Booking</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: #f8fafc;
+    }
+    .screen { display: none; width: 100%; max-width: 440px; }
+    .screen.active { display: block; animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 12px;
+      color: #a5b4fc;
+      margin-bottom: 8px;
+    }
+    h1 { font-size: 26px; margin-bottom: 4px; }
+    .subtitle { color: #cbd5e1; font-size: 14px; margin-bottom: 24px; }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      font-size: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .detail-row span:first-child { color: #94a3b8; }
+    .qty {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 20px 0;
+    }
+    .qty-controls { display: flex; align-items: center; gap: 16px; }
+    .qty-btn {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .qty-btn:hover { background: rgba(255, 255, 255, 0.18); }
+    .qty-value { font-size: 20px; font-weight: 600; min-width: 24px; text-align: center; }
+    .total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 24px 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .total .amount { color: #a5b4fc; font-size: 24px; }
+    .btn {
+      width: 100%;
+      padding: 15px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4); }
+    .btn:active { transform: translateY(0); }
+    .btn.secondary {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      margin-top: 12px;
+    }
+
+    /* Loading screen */
+    .loading-wrap { text-align: center; padding: 48px 32px; }
+    .spinner {
+      width: 60px; height: 60px;
+      border: 4px solid rgba(255, 255, 255, 0.15);
+      border-top-color: #a5b4fc;
+      border-radius: 50%;
+      margin: 0 auto 28px;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-wrap h2 { font-size: 20px; margin-bottom: 8px; }
+    .loading-wrap p { color: #cbd5e1; font-size: 14px; }
+
+    /* Confirmation screen */
+    .check {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #059669);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 38px;
+      animation: pop 0.4s ease;
+    }
+    @keyframes pop {
+      0% { transform: scale(0); }
+      70% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+    .confirm-wrap { text-align: center; }
+    .confirm-wrap h2 { font-size: 24px; margin-bottom: 6px; }
+    .confirm-wrap .subtitle { margin-bottom: 24px; }
+    .ticket-code {
+      font-family: monospace;
+      font-size: 18px;
+      letter-spacing: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px dashed rgba(255, 255, 255, 0.25);
+      border-radius: 10px;
+      padding: 14px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Screen 1: Booking -->
+  <section id="booking" class="screen active">
+    <div class="card">
+      <div class="eyebrow">Live Concert</div>
+      <h1>Aurora Live 2026</h1>
+      <p class="subtitle">Neon Arena · Fri, Oct 9 · 8:00 PM</p>
+
+      <div class="detail-row"><span>Section</span><span>General Admission</span></div>
+      <div class="detail-row"><span>Price per ticket</span><span>$49.00</span></div>
+      <div class="detail-row"><span>Availability</span><span>In stock</span></div>
+
+      <div class="qty">
+        <span>Quantity</span>
+        <div class="qty-controls">
+          <button class="qty-btn" onclick="changeQty(-1)">−</button>
+          <span class="qty-value" id="qty">1</span>
+          <button class="qty-btn" onclick="changeQty(1)">+</button>
+        </div>
+      </div>
+
+      <div class="total">
+        <span>Total</span>
+        <span class="amount" id="total">$49.00</span>
+      </div>
+
+      <button class="btn" onclick="buyTicket()">Buy Ticket</button>
+    </div>
+  </section>
+
+  <!-- Screen 2: Loading -->
+  <section id="loading" class="screen">
+    <div class="card loading-wrap">
+      <div class="spinner"></div>
+      <h2>Processing your payment…</h2>
+      <p>Securing your seats, please hold on.</p>
+    </div>
+  </section>
+
+  <!-- Screen 3: Confirmation -->
+  <section id="confirmation" class="screen">
+    <div class="card confirm-wrap">
+      <div class="check">✓</div>
+      <h2>You're going!</h2>
+      <p class="subtitle">Your tickets have been booked successfully.</p>
+
+      <div class="detail-row"><span>Event</span><span>Aurora Live 2026</span></div>
+      <div class="detail-row"><span>Tickets</span><span id="confirm-qty">1</span></div>
+      <div class="detail-row"><span>Paid</span><span id="confirm-total">$49.00</span></div>
+
+      <div class="ticket-code" id="ticket-code">AUR-000000</div>
+
+      <button class="btn secondary" onclick="reset()">Book Another</button>
+    </div>
+  </section>
+
+  <script>
+    const PRICE = 49;
+    let qty = 1;
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function changeQty(delta) {
+      qty = Math.max(1, Math.min(10, qty + delta));
+      document.getElementById('qty').textContent = qty;
+      document.getElementById('total').textContent = '$' + (qty * PRICE).toFixed(2);
+    }
+
+    function randomCode() {
+      const n = Math.floor(100000 + Math.random() * 900000);
+      return 'AUR-' + n;
+    }
+
+    function buyTicket() {
+      showScreen('loading');
+      // Random delay between 1 and 4 seconds
+      const delay = 1000 + Math.random() * 3000;
+      setTimeout(() => {
+        document.getElementById('confirm-qty').textContent = qty;
+        document.getElementById('confirm-total').textContent = '$' + (qty * PRICE).toFixed(2);
+        document.getElementById('ticket-code').textContent = randomCode();
+        showScreen('confirmation');
+      }, delay);
+    }
+
+    function reset() {
+      qty = 1;
+      document.getElementById('qty').textContent = qty;
+      document.getElementById('total').textContent = '$' + PRICE.toFixed(2);
+      showScreen('booking');
+    }
+  </script>
+</body>
+</html>
