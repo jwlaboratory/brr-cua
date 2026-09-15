@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quarterly Report</title>
+  <style>html,body{margin:0;height:100%;background:#0f1017;overflow:hidden}canvas{display:block}</style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <script>
+    // A "report" page that takes ~14s to load, then reveals concrete data.
+    // Rendered to canvas only (no DOM text), so an agent asked "what's the data
+    // here?" must (a) look at pixels and (b) wait for the load to finish before
+    // it can answer — which forces the screenshot-polling loop.
+    const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+    let W, H, DPR = Math.max(1, devicePixelRatio || 1);
+    const DURATION = 30000;   // ~30s, indeterminate — no progress shown
+    const start = performance.now();
+
+    // The data that only appears once loaded.
+    const KPIS = [['Revenue','$128,400'],['Active users','8,210'],['Conversion','3.6%']];
+    const BARS = [42, 61, 55, 78, 96, 70];  // Jan..Jun
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun'];
+
+    function resize(){ W=innerWidth; H=innerHeight; cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); }
+    addEventListener('resize', resize); resize();
+    function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+    function frame(now){
+      const e = now - start, done = e >= DURATION, cx=W/2, cy=H/2;
+      const g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#12131c'); g.addColorStop(1,'#191426');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H); ctx.textAlign='center';
+
+      if(!done){
+        // Indeterminate spinner only — no progress bar, no %, no timing cue.
+        const a=(now/700)*Math.PI*2, r=26;
+        ctx.lineWidth=4; ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.beginPath(); ctx.arc(cx,cy-24,r,0,7); ctx.stroke();
+        ctx.strokeStyle='#7c6cf6'; ctx.beginPath(); ctx.arc(cx,cy-24,r,a,a+1.7); ctx.stroke();
+        ctx.fillStyle='#c9c6db'; ctx.font='600 20px system-ui,sans-serif'; ctx.fillText('Loading report…', cx, cy+34);
+      } else {
+        const px = Math.max(40,(W-720)/2), top = Math.max(70,(H-360)/2);
+        ctx.textAlign='left';
+        ctx.fillStyle='#8b87a8'; ctx.font='600 13px ui-monospace,monospace'; ctx.fillText('QUARTERLY REPORT · Q3 2026', px, top);
+        ctx.fillStyle='#f3f2fa'; ctx.font='700 30px system-ui,sans-serif'; ctx.fillText('Acme Analytics', px, top+38);
+        // KPI cards
+        const cw=220, ch=92, gap=20;
+        KPIS.forEach((k,i)=>{
+          const x=px+i*(cw+gap), y=top+64;
+          ctx.fillStyle='#1c1d2b'; rr(x,y,cw,ch,12); ctx.fill();
+          ctx.fillStyle='#8b87a8'; ctx.font='500 13px system-ui,sans-serif'; ctx.fillText(k[0], x+16, y+28);
+          ctx.fillStyle='#f3f2fa'; ctx.font='700 30px ui-monospace,monospace'; ctx.fillText(k[1], x+16, y+66);
+        });
+        // bar chart
+        const chY=top+64+ch+50, chBottom=chY+150, chX=px;
+        const cols=['#7c6cf6','#22c55e','#f59e0b','#ef4444','#38bdf8','#a855f7'];
+        const bw=64, bgap=48;
+        BARS.forEach((v,i)=>{
+          const x=chX+i*(bw+bgap), h=v/100*150, y=chBottom-h;
+          ctx.fillStyle=cols[i]; rr(x,y,bw,h,6); ctx.fill();
+          ctx.fillStyle='#6b6880'; ctx.font='500 12px ui-monospace,monospace'; ctx.textAlign='center';
+          ctx.fillText(MONTHS[i], x+bw/2, chBottom+20); ctx.textAlign='left';
+        });
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>

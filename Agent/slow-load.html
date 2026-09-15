@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slow Load</title>
+  <style>html,body{margin:0;height:100%;background:#0f1017;overflow:hidden}canvas{display:block}</style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <script>
+    // A page that "loads" for ~18s with a determinate progress bar and a large,
+    // live ELAPSED clock. State is drawn to canvas only (nothing in the DOM),
+    // so a computer-use agent must screenshot to perceive it. Because the clock
+    // is drawn from performance.now() at paint time, every screenshot shows the
+    // true wall-clock moment it was taken — which makes an agent's real polling
+    // cadence directly readable from the sequence of screenshots.
+    const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+    let W, H, DPR = Math.max(1, devicePixelRatio || 1);
+    const DURATION = 18000;               // 18s fake load
+    const start = performance.now();
+
+    function resize(){ W=innerWidth; H=innerHeight; cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); }
+    addEventListener('resize', resize); resize();
+
+    function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+    function frame(now){
+      const e = now - start, done = e >= DURATION;
+      const cx = W/2, cy = H/2;
+      const g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,'#12131c'); g.addColorStop(1,'#191426');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      ctx.textAlign='center';
+
+      if(!done){
+        // spinner
+        const a=(now/700)*Math.PI*2, r=26;
+        ctx.lineWidth=4; ctx.strokeStyle='rgba(255,255,255,.14)';
+        ctx.beginPath(); ctx.arc(cx,cy-96,r,0,7); ctx.stroke();
+        ctx.strokeStyle='#7c6cf6';
+        ctx.beginPath(); ctx.arc(cx,cy-96,r,a,a+1.7); ctx.stroke();
+
+        ctx.fillStyle='#c9c6db'; ctx.font='600 20px system-ui,sans-serif';
+        ctx.fillText('Loading your dashboard…', cx, cy-36);
+
+        // big live elapsed clock
+        ctx.fillStyle='#f3f2fa'; ctx.font='700 64px ui-monospace,Menlo,monospace';
+        ctx.fillText((e/1000).toFixed(1)+' s', cx, cy+44);
+
+        // progress bar
+        const bw=Math.min(460,W-80), bx=cx-bw/2, by=cy+78;
+        ctx.fillStyle='#26283a'; rr(bx,by,bw,10,5); ctx.fill();
+        ctx.fillStyle='#7c6cf6'; rr(bx,by,Math.max(10,bw*e/DURATION),10,5); ctx.fill();
+        ctx.fillStyle='#6b6880'; ctx.font='500 13px ui-monospace,monospace';
+        ctx.fillText(Math.round(100*e/DURATION)+'%  ·  still loading', cx, by+34);
+      } else {
+        // ready
+        ctx.fillStyle='#12b981'; ctx.beginPath(); ctx.arc(cx,cy-70,34,0,7); ctx.fill();
+        ctx.strokeStyle='#fff'; ctx.lineWidth=6; ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(cx-15,cy-70); ctx.lineTo(cx-4,cy-58); ctx.lineTo(cx+17,cy-84); ctx.stroke();
+        ctx.fillStyle='#f3f2fa'; ctx.font='700 30px system-ui,sans-serif';
+        ctx.fillText('Ready', cx, cy+6);
+        ctx.fillStyle='#8b87a8'; ctx.font='500 15px ui-monospace,monospace';
+        ctx.fillText('loaded in '+(e/1000).toFixed(1)+' s', cx, cy+38);
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>
